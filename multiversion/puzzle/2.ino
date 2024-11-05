@@ -97,4 +97,84 @@ void generateQRCode(uint8_t version, const char *data) {
     Serial.print("Version: "); Serial.println(version);
     Serial.print("Module Size: "); Serial.println(versionProps.moduleSize);
     Serial.print("Data Codewords (L, M, Q, H): ");
-    for (uint8_t i =
+    // Loop through each error correction level to print data codewords for this version
+    for (uint8_t i = 0; i < 4; i++) {
+        Serial.print(versionProps.dataCodewords[i]);
+        Serial.print(i < 3 ? ", " : "\n");
+    }
+
+    // Print alignment pattern positions
+    Serial.print("Alignment Pattern Positions: ");
+    for (uint8_t i = 0; i < versionProps.alignmentPatternCount; i++) {
+        uint8_t position;
+        memcpy_P(&position, &versionProps.alignmentPatternPositions[i], sizeof(uint8_t));
+        Serial.print(position);
+        Serial.print(i < versionProps.alignmentPatternCount - 1 ? ", " : "\n");
+    }
+
+    // Initialize a 2D array for the QR code matrix with the specified module size
+    uint8_t matrix[137][137] = {}; // Maximum size for version 30 is 137x137
+
+    // Set the finder patterns, timing patterns, and alignment patterns based on versionProps
+    setupFinderPatterns(matrix, versionProps.moduleSize);
+    setupTimingPatterns(matrix, versionProps.moduleSize);
+    setupAlignmentPatterns(matrix, versionProps.alignmentPatternPositions, versionProps.alignmentPatternCount);
+
+    // Encode the data into the QR code matrix (this is where encoding logic would be implemented)
+    encodeData(matrix, data, versionProps.dataCodewords);
+
+    // Print the final matrix for debugging (optional)
+    for (uint8_t row = 0; row < versionProps.moduleSize; row++) {
+        for (uint8_t col = 0; col < versionProps.moduleSize; col++) {
+            Serial.print(matrix[row][col] ? "#" : " ");
+        }
+        Serial.println();
+    }
+}
+
+// Helper function to set up finder patterns in the QR matrix
+void setupFinderPatterns(uint8_t matrix[][137], uint8_t size) {
+    // Implement the logic to place 7x7 finder patterns at corners
+}
+
+// Helper function to set up timing patterns in the QR matrix
+void setupTimingPatterns(uint8_t matrix[][137], uint8_t size) {
+    // Implement the logic to place horizontal and vertical timing patterns
+}
+
+// Helper function to set up alignment patterns in the QR matrix
+void setupAlignmentPatterns(uint8_t matrix[][137], const uint8_t *alignmentPatternPositions, uint8_t count) {
+    for (uint8_t i = 0; i < count; i++) {
+        uint8_t pos;
+        memcpy_P(&pos, &alignmentPatternPositions[i], sizeof(uint8_t));
+        for (uint8_t j = 0; j < count; j++) {
+            uint8_t pos2;
+            memcpy_P(&pos2, &alignmentPatternPositions[j], sizeof(uint8_t));
+            // Avoid placing alignment pattern on top of finder patterns
+            if ((i == 0 && j == 0) || (i == count - 1 && j == 0) || (i == 0 && j == count - 1)) continue;
+            placeAlignmentPattern(matrix, pos, pos2);
+        }
+    }
+}
+
+// Helper function to place a 5x5 alignment pattern at a specific position in the matrix
+void placeAlignmentPattern(uint8_t matrix[][137], uint8_t row, uint8_t col) {
+    // Logic to place a 5x5 alignment pattern centered on (row, col)
+}
+
+// Helper function to encode data into the QR matrix
+void encodeData(uint8_t matrix[][137], const char *data, const uint8_t *dataCodewords) {
+    // Data encoding logic would go here (encoding mode, bitstream creation, and error correction)
+}
+
+void setup() {
+    Serial.begin(115200);
+    delay(1000);
+
+    // Generate a QR code for version 5 as an example
+    generateQRCode(5, "Hello, QR!");
+}
+
+void loop() {
+    // No loop actions needed for this example
+}
